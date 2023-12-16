@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"module": "NodeNext",
+		"target": "ESNext",
+		"allowJs": true,
+		"resolveJsonModule": true,
+		"moduleResolution": "NodeNext",
+		"strict": true,
+		"noImplicitAny": true,
+		"lib": ["ESNext"],
+		"outDir": "dist"
+	},
+	"include": [
+		"./src/**/*"
+	],
+	"exclude": [
+		"node_modules"
+	],
+	"typeAcquisition": {
+		"enable": true
+	}
+}
