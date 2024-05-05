@@ -250,7 +250,7 @@ export interface MediasResponse {
 			image_status: ImageStatus
 			image_meta: {
 				aperture?: number
-				copyright: string
+				copyright?: string
 				make?: string
 				model?: string
 				orientation?: number

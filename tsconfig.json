@@ -5,7 +5,6 @@
 		"allowJs": true,
 		"resolveJsonModule": true,
 		"moduleResolution": "NodeNext",
-		"strict": true,
 		"noImplicitAny": true,
 		"lib": ["ESNext"],
 		"outDir": "dist"

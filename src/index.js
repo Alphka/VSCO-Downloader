@@ -17,7 +17,7 @@ const root = join(__dirname, "..")
 const output = cwd === root && relative(root, cwd).startsWith("..") ? join(root, "output") : cwd
 
 /** @type {import("../package.json")} */
-const Package = JSON.parse(readFileSync(join(root, "package.json")))
+const Package = JSON.parse(readFileSync(join(root, "package.json"), "utf8"))
 
 const { argv } = yargs(process.argv.slice(2))
 	.usage("vscodl <profile>")
@@ -53,9 +53,9 @@ function ExifDate(date){
 
 new class Downloader {
 	endpoint = "https://vsco.co/"
-	profile = argv._[0]
-	limit = argv.limit
-	queue = argv.queue
+	profile = /** @type {string} */ (argv._[0])
+	limit = /** @type {number} */ (argv.limit)
+	queue = /** @type {number} */ (argv.queue)
 
 	/** @type {Set<string>} */
 	filenames = new Set
@@ -97,8 +97,8 @@ new class Downloader {
 	async GetMedia(id, limit, cursor){
 		const url = new URL("/api/3.0/medias/profile", this.endpoint)
 
-		url.searchParams.append("site_id", id)
-		url.searchParams.append("limit", limit)
+		url.searchParams.append("site_id", id.toString())
+		url.searchParams.append("limit", limit.toString())
 
 		if(cursor) url.searchParams.append("cursor", cursor)
 
@@ -131,7 +131,10 @@ new class Downloader {
 				const medias = response.media.splice(0, this.queue)
 				const promises = /** @type {ReturnType<typeof this.DownloadMedia>[]} */ (new Array)
 
-				for(const media of medias) promises.push(this.DownloadMedia(media))
+				for(const media of medias){
+					console.log(media)
+					promises.push(this.DownloadMedia(media))
+				}
 
 				this.Debug.call("#324AB2", `Downloading ${promises.length} items…`)
 				await Promise.all(promises)
@@ -148,7 +151,9 @@ new class Downloader {
 			description,
 			last_updated,
 			upload_date,
-			image_status: { time },
+			image_status: {
+				time
+			},
 			image_meta: {
 				orientation,
 				copyright,
@@ -161,11 +166,12 @@ new class Downloader {
 				shutter_speed,
 				software,
 				white_balance,
-			},
+			} = {},
 			width,
 			height
 		}
 	}){
+		/** @type {string} */
 		let filename = responsive_url.split("/").at(-1)
 		const { name, ext } = parse(filename)
 
@@ -211,7 +217,7 @@ new class Downloader {
 			.jpeg({ quality: 100 })
 			.resize(width, height)
 			.withMetadata(metadata)
-			.toBuffer(path)
+			.toBuffer()
 
 		await writeFile(path, image)
 		await utimes(path, new Date, new Date(Math.min(time, last_updated, upload_date)))
