@@ -1,3 +1,10 @@
+export interface Options {
+	output?: string
+	force: boolean
+	limit?: 20 | string
+	queue?: 20 | string
+}
+
 export interface Assignment {
 	[key: string]: any
 }

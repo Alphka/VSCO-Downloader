@@ -1,2 +1,4 @@
-node_modules
-test.json
+.vscode/
+node_modules/
+output
+test*.*
