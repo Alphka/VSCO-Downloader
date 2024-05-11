@@ -30,6 +30,12 @@ const config = {
 			syntax: "<number>",
 			description: "Set max queue to download content",
 			defaultValue: 20
+		},
+		{
+			option: "novideo",
+			alternative: "nv",
+			description: "Disable video downloading",
+			defaultValue: false
 		}
 	]
 }

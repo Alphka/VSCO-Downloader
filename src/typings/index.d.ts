@@ -3,6 +3,7 @@ export interface Options {
 	force: boolean
 	limit?: 20 | string
 	queue?: 20 | string
+	novideo: boolean
 }
 
 export interface Assignment {

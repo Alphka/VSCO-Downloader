@@ -1,7 +1,7 @@
 {
 	"author": "Alphka",
 	"name": "vsco-downloader",
-	"version": "2.0.1",
+	"version": "2.0.2",
 	"description": "Download images and videos from a VSCO profile",
 	"main": "src/index.js",
 	"keywords": [

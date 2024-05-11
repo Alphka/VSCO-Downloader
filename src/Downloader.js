@@ -1,14 +1,10 @@
-import { dirname, join, parse } from "path"
 import { createWriteStream } from "fs"
-import { fileURLToPath } from "url"
 import { mkdir, utimes } from "fs/promises"
+import { join, parse } from "path"
 import { BASE_URL } from "./config.js"
 import axios from "axios"
 import sharp from "sharp"
 import Log from "./helpers/Log.js"
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
 
 const profileDataRegex = /(?<=window\.__PRELOADED_STATE__ = ){.+?}(?=<\/script>)/
 
@@ -54,12 +50,8 @@ export default class Downloader {
 		this.limit = limit
 	}
 
-	/**
-	 * @param {{
-	 * 	output: string
-	 * }} data
-	 */
-	async Init({ output }){
+	/** @param {Pick<import("./typings/index.d.ts").Options, "output" | "novideo">} data */
+	async Init({ output, novideo }){
 		Log("Initializing")
 
 		if(!this.profile) return "No profile was given"
@@ -73,7 +65,7 @@ export default class Downloader {
 		Log("Starting download")
 		const folder = join(output, this.profile)
 
-		await this.DownloadProfile(site.id, folder)
+		await this.DownloadProfile(site.id, folder, novideo)
 	}
 	async GetProfileData(){
 		const url = new URL(`/${this.profile}/gallery`, BASE_URL)
@@ -83,7 +75,7 @@ export default class Downloader {
 
 		if(!data) Log(new Error("No profile data found"))
 
-		return /** @type {import("./typings/index.js").Data} */ (JSON.parse(data))
+		return /** @type {import("./typings/index.d.ts").Data} */ (JSON.parse(data))
 	}
 	/**
 	 * @param {number} id
@@ -110,13 +102,14 @@ export default class Downloader {
 			responseType: "json"
 		})
 
-		return /** @type {import("./typings/index.js").MediasResponse} */ (response.data)
+		return /** @type {import("./typings/index.d.ts").MediasResponse} */ (response.data)
 	}
 	/**
 	 * @param {number} siteId
 	 * @param {string} folder
+	 * @param {boolean} [novideo]
 	 */
-	async DownloadProfile(siteId, folder){
+	async DownloadProfile(siteId, folder, novideo = false){
 		/** @type {string | undefined} */
 		let cursor
 		/** @type {Awaited<ReturnType<typeof this.GetMedia>>} */
@@ -135,7 +128,7 @@ export default class Downloader {
 
 				await folderPromise
 				for(const media of medias){
-					promises.push(this.DownloadMedia(media, folder))
+					promises.push(this.DownloadMedia(media, folder, novideo))
 				}
 
 				if(first){
@@ -155,8 +148,9 @@ export default class Downloader {
 		return /^https?:\/\//.test(url) ? url : `${protocol}://` + url
 	}
 	/**
-	 * @param {import("./typings/index.js").MediasResponse["media"][number]} media
+	 * @param {import("./typings/index.d.ts").MediasResponse["media"][number]} media
 	 * @param {string} folder
+	 * @param {boolean} novideo
 	 */
 	async DownloadMedia({
 		image: {
@@ -167,9 +161,12 @@ export default class Downloader {
 			upload_date,
 			image_status: { time }
 		}
-	}, folder){
-		const url = this.GetURL(is_video ? video_url : responsive_url)
+	}, folder, novideo){
+		const shouldDownloadVideos = !novideo
+		const url = this.GetURL(shouldDownloadVideos && is_video ? video_url : responsive_url)
+
 		let filename = /** @type {string} */ (url.split("/").at(-1))
+
 		const { name, ext } = parse(filename)
 
 		for(let i = 1; this.filenames.has(filename); i++){
@@ -180,7 +177,7 @@ export default class Downloader {
 
 		const path = join(folder, filename)
 
-		if(is_video){
+		if(shouldDownloadVideos && is_video){
 			/** @type {import("axios").AxiosResponse<import("stream").Writable>} */
 			const response = await axios.get(url, {
 				headers: {

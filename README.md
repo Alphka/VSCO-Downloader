@@ -27,6 +27,7 @@ Options:
   -f, --force           Force creation of output directory (default: false)
   -l, --limit <number>  Set content limit to fetch from VSCO API (default: 20)
   -q, --queue <number>  Set how many items will be downloaded at the same time (default: 20)
+  -nv, --novideo        Disable video downloading (default: false)
   -h, --help            Display help
 ```
 

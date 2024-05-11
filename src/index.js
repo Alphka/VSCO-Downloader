@@ -76,8 +76,8 @@ const command = program
 			)
 
 			await downloader.Init({
-				output,
-				...options
+				...options,
+				output
 			})
 		}catch(error){
 			Log(error instanceof Error ? error : new Error(String(error)))
