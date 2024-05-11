@@ -1,4 +1,5 @@
 import { dirname, join, parse } from "path"
+import { createWriteStream } from "fs"
 import { fileURLToPath } from "url"
 import { mkdir, utimes } from "fs/promises"
 import { BASE_URL } from "./config.js"
@@ -9,22 +10,24 @@ import Log from "./helpers/Log.js"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const root = join(__dirname, "..")
-
 const profileDataRegex = /(?<=window\.__PRELOADED_STATE__ = ){.+?}(?=<\/script>)/
 
 Object.assign(axios.defaults.headers.common, {
 	"Sec-Ch-Prefers-Color-Scheme": "dark",
-	"Sec-Ch-Ua": '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
-	"Sec-Ch-Ua-Full-version-list": '"Not A(Brand";v="99.0.0.0", "Google Chrome";v="121.0.6167.185", "Chromium";v="121.0.6167.185"',
+	"Sec-Ch-Ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
 	"Sec-Ch-Ua-Mobile": "?0",
-	"Sec-Ch-Ua-Model": '""',
 	"Sec-Ch-Ua-Platform": '"Windows"',
-	"Sec-Ch-Ua-Platform-version": '"15.0.0"',
 	"Sec-Fetch-Site": "same-origin",
 	"Sec-Fetch-Dest": "empty",
 	"Sec-Fetch-Mode": "cors",
-	"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+	"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+})
+
+Object.assign(axios.defaults.headers.get, {
+	Priority: "i",
+	Referer: BASE_URL + "/",
+	"Sec-Fetch-Site": "same-site",
+	"Sec-Fetch-Mode": "no-cors",
 })
 
 /** @param {number | string | Date} date */
@@ -145,21 +148,28 @@ export default class Downloader {
 		}while(response.next_cursor)
 	}
 	/**
+	 * @param {string} url
+	 * @param {"http" | "https"} protocol
+	 */
+	GetURL(url, protocol = "https"){
+		return /^https?:\/\//.test(url) ? url : `${protocol}://` + url
+	}
+	/**
 	 * @param {import("./typings/index.js").MediasResponse["media"][number]} media
 	 * @param {string} folder
 	 */
 	async DownloadMedia({
 		image: {
+			is_video,
+			video_url,
 			responsive_url,
 			last_updated,
 			upload_date,
-			image_status: { time },
-			width,
-			height
+			image_status: { time }
 		}
 	}, folder){
-		/** @type {string} */
-		let filename = responsive_url.split("/").at(-1)
+		const url = this.GetURL(is_video ? video_url : responsive_url)
+		let filename = /** @type {string} */ (url.split("/").at(-1))
 		const { name, ext } = parse(filename)
 
 		for(let i = 1; this.filenames.has(filename); i++){
@@ -170,14 +180,39 @@ export default class Downloader {
 
 		const path = join(folder, filename)
 
-		const response = await axios.get(`https://${responsive_url}`, {
-			responseType: "arraybuffer"
-		})
+		if(is_video){
+			/** @type {import("axios").AxiosResponse<import("stream").Writable>} */
+			const response = await axios.get(url, {
+				headers: {
+					Accept: "*\/*",
+					Range: "bytes=0-",
+					"Accept-Encoding": "identity;q=1, *;q=0",
+					"Sec-Fetch-Dest": "video"
+				},
+				responseType: "stream"
+			})
 
-		await sharp(response.data, { failOnError: false })
-			.keepExif()
-			.jpeg({ quality: 100 })
-			.toFile(path)
+			await new Promise((resolve, reject) => {
+				response.data.pipe(createWriteStream(path))
+					.on("close", resolve)
+					.on("error", reject)
+			})
+		}else{
+			const response = await axios.get(url, {
+				headers: {
+					Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+					Priority: "u=1, i",
+					"Sec-Fetch-Dest": "image"
+				},
+				responseType: "arraybuffer",
+				maxRedirects: 3
+			})
+
+			await sharp(response.data, { failOnError: false })
+				.keepExif()
+				.jpeg({ quality: 100 })
+				.toFile(path)
+		}
 
 		await utimes(path, new Date, new Date(Math.min(time, last_updated, upload_date)))
 	}

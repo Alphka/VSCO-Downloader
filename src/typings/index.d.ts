@@ -230,7 +230,7 @@ export interface Data {
 
 export interface MediasResponse {
 	media: {
-		type: string
+		type: "image"
 		image: {
 			_id: string
 			grid_name: string
@@ -248,6 +248,7 @@ export interface MediasResponse {
 			feature_link: null
 			is_featured: boolean
 			is_video: boolean
+			video_url?: string
 			perma_domain: string
 			perma_subdomain: string
 			permalink: string
@@ -255,9 +256,9 @@ export interface MediasResponse {
 			responsive_url: string
 			show_location: number
 			image_status: ImageStatus
-			image_meta: {
+			image_meta?: {
 				aperture?: number
-				copyright?: string
+				copyright: string
 				make?: string
 				model?: string
 				orientation?: number
