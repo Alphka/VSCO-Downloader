@@ -5,6 +5,10 @@
 	"description": "Download images and videos from a VSCO profile",
 	"main": "src/index.js",
 	"private": true,
+	"scripts": {
+		"lint": "eslint .",
+		"lint:tsc": "tsc -p jsconfig.json"
+	},
 	"keywords": [
 		"vsco",
 		"download",

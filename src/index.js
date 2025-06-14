@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, readFileSync } from "fs"
 import { fileURLToPath } from "url"
 import { program } from "commander"
 import Downloader from "./Downloader.js"
-import isNumber from "./helpers/isNumber.js"
+import IsNumber from "./helpers/IsNumber.js"
 import config from "./config.js"
 import Log from "./helpers/Log.js"
 
@@ -71,8 +71,8 @@ const command = program
 
 				const downloader = new Downloader(
 					command.args[0],
-					isNumber(options.queue) ? Number(options.queue) : isNumber(defaultQueue) ? Number(defaultQueue) : 20,
-					isNumber(options.limit) ? Number(options.limit) : isNumber(defaultLimit) ? Number(defaultLimit) : 20
+					IsNumber(options.queue) ? Number(options.queue) : IsNumber(defaultQueue) ? Number(defaultQueue) : 20,
+					IsNumber(options.limit) ? Number(options.limit) : IsNumber(defaultLimit) ? Number(defaultLimit) : 20
 				)
 
 				await downloader.Init({

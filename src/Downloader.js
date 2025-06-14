@@ -2,12 +2,14 @@ import { createWriteStream } from "fs"
 import { mkdir, utimes } from "fs/promises"
 import { join, parse } from "path"
 import { BASE_URL } from "./config.js"
+import SafelyReplaceUndefined from "./helpers/SafelyReplaceUndefined.js"
+import RestoreUndefined from "./helpers/RestoreUndefined.js"
+import Debug from "./helpers/Debug.js"
 import axios from "axios"
 import sharp from "sharp"
 import Log from "./helpers/Log.js"
-import Debug from "./helpers/Debug.js"
 
-const profileDataRegex = /window\.__PRELOADED_STATE__ = (\{.+?\})<\/script>/
+const profileDataRegex = /window\.__PRELOADED_STATE__\s*=\s*(\{.+?\})<\/script>/
 
 Object.assign(axios.defaults.headers.common, {
 	"Sec-Ch-Prefers-Color-Scheme": "dark",
@@ -76,27 +78,9 @@ export default class Downloader {
 		if(!data) Log(new Error("No profile data found"))
 
 		try{
-			function reviveUndefined(object){
-				if(Array.isArray(object)){
-					return object.map(reviveUndefined)
-				}
+			data = SafelyReplaceUndefined(data)
 
-				if(object && typeof object === "object"){
-					for(const key in object){
-						if(object[key] === "__UNDEFINED__"){
-							object[key] = undefined
-						}else{
-							object[key] = reviveUndefined(object[key])
-						}
-					}
-				}
-
-				return object
-			}
-
-			data = data.replace(/\bundefined\b/, '"__UNDEFINED__"')
-
-			return /** @type {import("./typings/index.d.ts").Data} */ (reviveUndefined(JSON.parse(data)))
+			return /** @type {import("./typings/index.d.ts").Data} */ (RestoreUndefined(JSON.parse(data)))
 		}catch(error){
 			if(this.debug) Debug("Profile data:", data)
 			throw error
