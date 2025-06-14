@@ -4,6 +4,7 @@ export interface Options {
 	limit?: 20 | string
 	queue?: 20 | string
 	novideo: boolean
+	debug?: boolean
 }
 
 export interface Assignment {

@@ -36,6 +36,11 @@ const config = {
 			alternative: "nv",
 			description: "Disable video downloading",
 			defaultValue: false
+		},
+		{
+			option: "debug",
+			alternative: "d",
+			description: "Verbose output"
 		}
 	]
 }

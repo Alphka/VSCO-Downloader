@@ -1,10 +1,9 @@
-#!/usr/bin/env node --no-warnings
+#!/usr/bin/env node
 
 import { dirname, isAbsolute, join, relative, resolve } from "path"
-import { existsSync, mkdirSync } from "fs"
+import { existsSync, mkdirSync, readFileSync } from "fs"
 import { fileURLToPath } from "url"
 import { program } from "commander"
-import packageConfig from "../package.json" assert { type: "json" }
 import Downloader from "./Downloader.js"
 import isNumber from "./helpers/isNumber.js"
 import config from "./config.js"
@@ -12,9 +11,10 @@ import Log from "./helpers/Log.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-
-const cwd = process.cwd()
 const root = join(__dirname, "..")
+const cwd = process.cwd()
+
+const packageInfo = /** @type {import("../package.json")} */ (JSON.parse(readFileSync(join(root, "package.json"), "utf8")))
 
 /**
  * @param {string | undefined} directory
@@ -49,9 +49,9 @@ function GetConfigOption(name){
 }
 
 const command = program
-	.name(packageConfig.bin && Object.keys(packageConfig.bin)[0] || packageConfig.name)
-	.version(packageConfig.version, "-v, --version", "Display program version")
-	.description(packageConfig.description)
+	.name(packageInfo.bin && Object.keys(packageInfo.bin)[0] || packageInfo.name)
+	.version(packageInfo.version, "-v, --version", "Display program version")
+	.description(packageInfo.description)
 	.argument(config.argument.name, config.argument.description)
 	.helpOption("-h, --help", "Display help")
 	.action(
@@ -61,28 +61,28 @@ const command = program
 		 * @param {import("commander").Command} command
 		 */
 		async (_arg, options, command) => {
-		try{
-			if(!command.args.length) throw "No profile provided"
+			try{
+				if(!command.args.length) throw "No profile provided"
 
-			const output = GetOutputDirectory(options.output, options.force)
+				const output = GetOutputDirectory(options.output, options.force)
 
-			const defaultQueue = GetConfigOption("queue")
-			const defaultLimit = GetConfigOption("limit")
+				const defaultQueue = GetConfigOption("queue")
+				const defaultLimit = GetConfigOption("limit")
 
-			const downloader = new Downloader(
-				command.args[0],
-				isNumber(options.queue) ? Number(options.queue) : isNumber(defaultQueue) ? Number(defaultQueue) : 20,
-				isNumber(options.limit) ? Number(options.limit) : isNumber(defaultLimit) ? Number(defaultLimit) : 20
-			)
+				const downloader = new Downloader(
+					command.args[0],
+					isNumber(options.queue) ? Number(options.queue) : isNumber(defaultQueue) ? Number(defaultQueue) : 20,
+					isNumber(options.limit) ? Number(options.limit) : isNumber(defaultLimit) ? Number(defaultLimit) : 20
+				)
 
-			await downloader.Init({
-				...options,
-				output
-			})
-		}catch(error){
-			Log(error instanceof Error ? error : new Error(String(error)))
-		}
-	})
+				await downloader.Init({
+					...options,
+					output
+				})
+			}catch(error){
+				Log(error instanceof Error ? error : new Error(String(error)))
+			}
+		})
 
 config.options.forEach(({ option, alternative, description, defaultValue, syntax }) => {
 	let flags = ""

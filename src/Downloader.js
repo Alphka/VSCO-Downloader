@@ -5,8 +5,9 @@ import { BASE_URL } from "./config.js"
 import axios from "axios"
 import sharp from "sharp"
 import Log from "./helpers/Log.js"
+import Debug from "./helpers/Debug.js"
 
-const profileDataRegex = /(?<=window\.__PRELOADED_STATE__ = ){.+?}(?=<\/script>)/
+const profileDataRegex = /window\.__PRELOADED_STATE__ = (\{.+?\})<\/script>/
 
 Object.assign(axios.defaults.headers.common, {
 	"Sec-Ch-Prefers-Color-Scheme": "dark",
@@ -23,13 +24,8 @@ Object.assign(axios.defaults.headers.get, {
 	Priority: "i",
 	Referer: BASE_URL + "/",
 	"Sec-Fetch-Site": "same-site",
-	"Sec-Fetch-Mode": "no-cors",
+	"Sec-Fetch-Mode": "no-cors"
 })
-
-/** @param {number | string | Date} date */
-function ExifDate(date){
-	return new Date(date).toISOString().substring(0, 19).split("T").join(" ").replaceAll("-", ":")
-}
 
 export default class Downloader {
 	/** @type {string} */ profile
@@ -50,11 +46,13 @@ export default class Downloader {
 		this.limit = limit
 	}
 
-	/** @param {Pick<import("./typings/index.d.ts").Options, "output" | "novideo">} data */
-	async Init({ output, novideo }){
+	/** @param {Pick<import("./typings/index.d.ts").Options, "debug" | "output" | "novideo">} data */
+	async Init({ debug, output, novideo }){
 		Log("Initializing")
 
 		if(!this.profile) return "No profile was given"
+
+		this.debug = debug
 
 		const { sites, users: { currentUser } } = await this.GetProfileData()
 		const { site } = sites.siteByUsername[this.profile]
@@ -71,11 +69,38 @@ export default class Downloader {
 		const url = new URL(`/${this.profile}/gallery`, BASE_URL)
 		const response = await axios.get(url.href, { responseType: "text" })
 
-		const data = response.data.match(profileDataRegex)?.[0]
+		if(this.debug) Debug("GetProfileData:", response.data)
+
+		let data = response.data.match(profileDataRegex)?.[1]
 
 		if(!data) Log(new Error("No profile data found"))
 
-		return /** @type {import("./typings/index.d.ts").Data} */ (JSON.parse(data))
+		try{
+			function reviveUndefined(object){
+				if(Array.isArray(object)){
+					return object.map(reviveUndefined)
+				}
+
+				if(object && typeof object === "object"){
+					for(const key in object){
+						if(object[key] === "__UNDEFINED__"){
+							object[key] = undefined
+						}else{
+							object[key] = reviveUndefined(object[key])
+						}
+					}
+				}
+
+				return object
+			}
+
+			data = data.replace(/\bundefined\b/, '"__UNDEFINED__"')
+
+			return /** @type {import("./typings/index.d.ts").Data} */ (reviveUndefined(JSON.parse(data)))
+		}catch(error){
+			if(this.debug) Debug("Profile data:", data)
+			throw error
+		}
 	}
 	/**
 	 * @param {number} id
@@ -127,6 +152,7 @@ export default class Downloader {
 				const promises = /** @type {ReturnType<typeof this.DownloadMedia>[]} */ (new Array)
 
 				await folderPromise
+
 				for(const media of medias){
 					promises.push(this.DownloadMedia(media, folder, novideo))
 				}
@@ -181,7 +207,7 @@ export default class Downloader {
 			/** @type {import("axios").AxiosResponse<import("stream").Writable>} */
 			const response = await axios.get(url, {
 				headers: {
-					Accept: "*\/*",
+					Accept: "*/*",
 					Range: "bytes=0-",
 					"Accept-Encoding": "identity;q=1, *;q=0",
 					"Sec-Fetch-Dest": "video"
@@ -191,15 +217,19 @@ export default class Downloader {
 
 			await new Promise((resolve, reject) => {
 				response.data.pipe(createWriteStream(path))
-					.on("close", resolve)
+					.on("close", () => resolve())
 					.on("error", reject)
 			})
 		}else{
 			const response = await axios.get(url, {
 				headers: {
 					Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-					Priority: "u=1, i",
-					"Sec-Fetch-Dest": "image"
+					Pragma: "no-cache",
+					Priority: "i",
+					"Cache-Control": "no-cache",
+					"Sec-Fetch-Dest": "image",
+					"Sec-Fetch-Mode": "cors",
+					"Sec-Fetch-Site": "cross-site"
 				},
 				responseType: "arraybuffer",
 				maxRedirects: 3
