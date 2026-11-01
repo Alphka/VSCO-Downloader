@@ -2,12 +2,12 @@ import { createWriteStream } from "fs"
 import { mkdir, utimes } from "fs/promises"
 import { join, parse } from "path"
 import { BASE_URL } from "./config.js"
-import SafelyReplaceUndefined from "./helpers/SafelyReplaceUndefined.js"
-import RestoreUndefined from "./helpers/RestoreUndefined.js"
-import Debug from "./helpers/Debug.js"
+import safelyReplaceUndefined from "./helpers/safelyReplaceUndefined.js"
+import restoreUndefined from "./helpers/restoreUndefined.js"
+import debugLog from "./helpers/debugLog.js"
 import axios from "axios"
 import sharp from "sharp"
-import Log from "./helpers/Log.js"
+import log from "./helpers/log.js"
 
 const profileDataRegex = /window\.__PRELOADED_STATE__\s*=\s*(\{.+?\})<\/script>/
 
@@ -50,7 +50,7 @@ export default class Downloader {
 
 	/** @param {Pick<import("./typings/index.d.ts").Options, "debug" | "output" | "novideo">} data */
 	async Init({ debug, output, novideo }){
-		Log("Initializing")
+		log("Initializing")
 
 		if(!this.profile) return "No profile was given"
 
@@ -59,10 +59,10 @@ export default class Downloader {
 		const { sites, users: { currentUser } } = await this.GetProfileData()
 		const { site } = sites.siteByUsername[this.profile]
 
-		Log(`Got user data, id: ${site.userId}`)
+		log(`Got user data, id: ${site.userId}`)
 		this.token = currentUser.tkn
 
-		Log("Starting download")
+		log("Starting download")
 		const folder = join(output, this.profile)
 
 		await this.DownloadProfile(site.id, folder, novideo)
@@ -71,18 +71,18 @@ export default class Downloader {
 		const url = new URL(`/${this.profile}/gallery`, BASE_URL)
 		const response = await axios.get(url.href, { responseType: "text" })
 
-		if(this.debug) Debug("GetProfileData:", response.data)
+		if(this.debug) debugLog("GetProfileData:", response.data)
 
 		let data = response.data.match(profileDataRegex)?.[1]
 
-		if(!data) Log(new Error("No profile data found"))
+		if(!data) log(new Error("No profile data found"))
 
 		try{
-			data = SafelyReplaceUndefined(data)
+			data = safelyReplaceUndefined(data)
 
-			return /** @type {import("./typings/index.d.ts").Data} */ (RestoreUndefined(JSON.parse(data)))
+			return /** @type {import("./typings/index.d.ts").Data} */ (restoreUndefined(JSON.parse(data)))
 		}catch(error){
-			if(this.debug) Debug("Profile data:", data)
+			if(this.debug) debugLog("Profile data:", data)
 			throw error
 		}
 	}
@@ -142,7 +142,7 @@ export default class Downloader {
 				}
 
 				if(first){
-					Log("Downloading profile")
+					log("Downloading profile")
 					first = false
 				}
 
@@ -219,7 +219,7 @@ export default class Downloader {
 				maxRedirects: 3
 			})
 
-			await sharp(response.data, { failOnError: false })
+			await sharp(response.data, { failOn: "none" })
 				.keepExif()
 				.jpeg({ quality: 100 })
 				.toFile(path)

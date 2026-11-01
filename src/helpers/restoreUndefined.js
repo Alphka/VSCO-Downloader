@@ -1,7 +1,7 @@
 /** @param {any} object */
-export default function RestoreUndefined(object){
+export default function restoreUndefined(object){
 	if(Array.isArray(object)){
-		return object.map(RestoreUndefined)
+		return object.map(restoreUndefined)
 	}
 
 	if(object && typeof object === "object"){
@@ -9,7 +9,7 @@ export default function RestoreUndefined(object){
 		for(const key in object){
 			if(Object.prototype.hasOwnProperty.call(object, key)){
 				if(object[key] === "__UNDEFINED__") result[key] = undefined
-				else result[key] = RestoreUndefined(object[key])
+				else result[key] = restoreUndefined(object[key])
 			}
 		}
 	}

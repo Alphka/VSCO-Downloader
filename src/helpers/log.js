@@ -4,7 +4,7 @@ import chalk from "chalk"
 
 const isTesting = process.env.npm_command === "test" || process.env.npm_lifecycle_event === "test"
 
-export default function Log(...args){
+export default function log(...args){
 	if(isTesting) return
 
 	const date = new Date().toLocaleString("pt-BR").split(", ")[1]

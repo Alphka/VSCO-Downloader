@@ -1,5 +1,5 @@
 /** @param {string} json */
-export default function SafelyReplaceUndefined(json){
+export default function safelyReplaceUndefined(json){
 	let inString = false
 	let result = ""
 

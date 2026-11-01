@@ -5,9 +5,9 @@ import { existsSync, mkdirSync, readFileSync } from "fs"
 import { fileURLToPath } from "url"
 import { program } from "commander"
 import Downloader from "./Downloader.js"
-import IsNumber from "./helpers/IsNumber.js"
+import isNumber from "./helpers/isNumber.js"
 import config from "./config.js"
-import Log from "./helpers/Log.js"
+import log from "./helpers/log.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -20,8 +20,8 @@ const packageInfo = /** @type {import("../package.json")} */ (JSON.parse(readFil
  * @param {string | undefined} directory
  * @param {boolean} force
  */
-function GetOutputDirectory(directory, force){
-	if(!directory) return GetOutputDirectory(cwd, force)
+function getOutputDirectory(directory, force){
+	if(!directory) return getOutputDirectory(cwd, force)
 
 	const path = resolve(cwd, directory)
 	const relativePath = relative(root, path)
@@ -44,7 +44,7 @@ function GetOutputDirectory(directory, force){
 }
 
 /** @param {string} name */
-function GetConfigOption(name){
+function getConfigOption(name){
 	return config.options.find(({ option }) => option === name)
 }
 
@@ -64,15 +64,15 @@ const command = program
 			try{
 				if(!command.args.length) throw "No profile provided"
 
-				const output = GetOutputDirectory(options.output, options.force)
+				const output = getOutputDirectory(options.output, options.force)
 
-				const defaultQueue = GetConfigOption("queue")
-				const defaultLimit = GetConfigOption("limit")
+				const defaultQueue = getConfigOption("queue")
+				const defaultLimit = getConfigOption("limit")
 
 				const downloader = new Downloader(
 					command.args[0],
-					IsNumber(options.queue) ? Number(options.queue) : IsNumber(defaultQueue) ? Number(defaultQueue) : 20,
-					IsNumber(options.limit) ? Number(options.limit) : IsNumber(defaultLimit) ? Number(defaultLimit) : 20
+					isNumber(options.queue) ? Number(options.queue) : isNumber(defaultQueue) ? Number(defaultQueue) : 20,
+					isNumber(options.limit) ? Number(options.limit) : isNumber(defaultLimit) ? Number(defaultLimit) : 20
 				)
 
 				await downloader.Init({
@@ -80,7 +80,7 @@ const command = program
 					output
 				})
 			}catch(error){
-				Log(error instanceof Error ? error : new Error(String(error)))
+				log(error instanceof Error ? error : new Error(String(error)))
 			}
 		})
 
