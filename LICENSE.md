@@ -1,6 +1,6 @@
 ISC License
 
-Copyright (c) 2024, Kayo Souza
+Copyright (c) 2023, Kayo Souza
 
 Permission to use, copy, modify, and/or distribute this software for any  
 purpose with or without fee is hereby granted, provided that the above  
