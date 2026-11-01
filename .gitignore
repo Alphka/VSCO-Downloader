@@ -44,3 +44,4 @@ tests/*
 !tests/index.test.js
 
 .vscode/launch.json
+.cspellcache

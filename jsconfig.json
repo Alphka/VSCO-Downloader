@@ -2,14 +2,14 @@
 	"compilerOptions": {
 		"module": "NodeNext",
 		"target": "ESNext",
-		"moduleResolution": "NodeNext",
-		"resolveJsonModule": true,
 		"checkJs": true,
 		"strict": true,
-		"skipLibCheck": false,
 		"noImplicitAny": false,
 		"strictNullChecks": false,
 		"strictPropertyInitialization": false,
+		"moduleResolution": "NodeNext",
+		"resolveJsonModule": true,
+		"skipLibCheck": false,
 		"lib": ["ESNext"],
 		"typeRoots": [
 			"node_modules/@types",

@@ -1,0 +1,27 @@
+{
+	"$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+	"version": "0.2",
+	"language": "en",
+	"words": [
+		"Alphka",
+		"apng",
+		"EXIF",
+		"KHTML",
+		"nonconstructor",
+		"nonoctal",
+		"novideo",
+		"perma",
+		"Souza",
+		"vsco",
+		"vscodl"
+	],
+	"ignorePaths": [
+		"node_modules/**",
+		".vscode/**",
+		".git/**",
+		".gitignore",
+		"pnpm-lock.yaml",
+		"pnpm-workspace.yaml",
+		"*.svg"
+	]
+}

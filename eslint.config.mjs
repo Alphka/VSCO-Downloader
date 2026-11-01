@@ -4,8 +4,9 @@ import { dirname } from "path"
 import unusedImports from "eslint-plugin-unused-imports"
 import regexpPlugin from "eslint-plugin-regexp"
 import stylistic from "@stylistic/eslint-plugin"
-import nPlugin from "eslint-plugin-n"
+import ordering from "eslint-plugin-ordering-conventions"
 import globals from "globals"
+import nPlugin from "eslint-plugin-n"
 import js from "@eslint/js"
 
 const compat = new FlatCompat({
@@ -16,6 +17,11 @@ const eslintConfig = [
 	js.configs.recommended,
 	nPlugin.configs["flat/recommended-script"],
 	regexpPlugin.configs["flat/recommended"],
+	{
+		name: "ordering-conventions",
+		files: ["**/*.{js,cjs,mjs}"],
+		...ordering.configs.recommended
+	},
 	{
 		plugins: {
 			js,
