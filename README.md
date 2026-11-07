@@ -33,8 +33,8 @@
 
 ## Requirements
 
-- [Node.js](https://nodejs.org/) 22.18.0 or newer. `22.18.0` is the lowest version that satisfies the `engines` of every installed dependency (cspell requires `>=22.18.0`); lint and the spell check were run on it, and earlier versions of the project on 22.13.0 and 26.12.1, other versions were not tested.
-- [pnpm](https://pnpm.io/) 12 (`engines.pnpm` is `>=11.0.0 <13.0.0`; tested with 12.15.0). The repository pins pnpm 12.10.1 in `packageManager`, so `pnpm-lock.yaml` must not be regenerated with another version.
+- [Node.js](https://nodejs.org/) 22.18.0 or newer.
+- [pnpm](https://pnpm.io/) 12. The repository pins pnpm 12.10.1 in `packageManager`, so `pnpm-lock.yaml` must not be regenerated with another version.
 
 ## Installation
 
@@ -95,8 +95,6 @@ Options:
 |---|---|
 | `pnpm lint` | Runs ESLint |
 | `pnpm lint:tsc` | Type checks the JavaScript code with `tsc -p jsconfig.json` |
-
-The repository has no automated tests.
 
 ## Project structure
 
