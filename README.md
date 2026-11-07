@@ -5,7 +5,9 @@
 </p>
 
 <p align="center">
-	<a href="LICENSE.md"><img alt="License: ISC" src="https://img.shields.io/badge/license-ISC-blue.svg"></a>
+	<a href="LICENSE.md">
+		<img alt="License: ISC" src="https://img.shields.io/badge/License-ISC-5271FF?style=for-the-badge">
+	</a>
 </p>
 
 > [!IMPORTANT]
